@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "InputActions",
+    "maps": [
+        {
+            "name": "Player",
+            "id": "4039409a-0fe7-45e9-883a-86a772f730ba",
+            "actions": [
+                {
+                    "name": "Click",
+                    "type": "Button",
+                    "id": "9831c560-0c47-4f1c-b861-1d95f479e674",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "9bcc6ec6-d560-4aaf-8871-dcdf4cc04a2c",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
