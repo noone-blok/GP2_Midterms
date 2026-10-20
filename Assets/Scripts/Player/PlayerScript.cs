@@ -1,13 +1,11 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
 
 public class PlayerScript : MonoBehaviour, ISwitchable
 {
     // LOOK INTO MAKING THE TURRET ROTATE
-
-    float currentTime;
-
     [SerializeField] private GameObject bullet;
     [SerializeField] private GameObject fireLocation;
 
@@ -28,6 +26,10 @@ public class PlayerScript : MonoBehaviour, ISwitchable
 
     void Start()
     {
+        // transform.Rotate(Vector3.forward, 90);
+
+        // the axis of rotation needs to be forward
+
         currentState = States.Red;
         currentColor = Color.red;
 
@@ -39,7 +41,23 @@ public class PlayerScript : MonoBehaviour, ISwitchable
 
     void Update()
     {
+        if (currentTarget != null)
+        {
+            Vector3 directionToTarget = (transform.position - currentTarget.transform.position).normalized;
 
+            if (directionToTarget != Vector3.zero)
+            {
+                Debug.Log("Turn");
+
+                float angleToTargetInDegrees = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
+                Quaternion rotationToTarget = Quaternion.Euler(0, 0, 90 - angleToTargetInDegrees);
+
+
+                // transform.rotation = Quaternion.AngleAxis(90 - angleToTargetInDegrees, Vector3.forward);
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotationToTarget, rotationSpeed * Time.deltaTime);
+            }
+        }
     }
 
     void Fire()
@@ -83,76 +101,29 @@ public class PlayerScript : MonoBehaviour, ISwitchable
         //Debug.Log(currentState);
     }
 
-    /* void Rotate()
-    {
-        // The Player's range is nine, right? 
-        int i = 0;
-
-        Collider2D[] colliderArray = Physics2D.OverlapCircleAll(transform.position, range);
-
-        foreach(Collider2D collider in colliderArray)
-        {
-            if(collider.TryGetComponent<EnemyBase>(out EnemyBase enemy))
-            {
-                Vector3 directionToTarget = (enemy.position - transform.position).normalized;
-                if (directionToTarget != Vector3.zero)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-                    //slerp - Spherical Linear Interpolation
-                }
-
-                float dotProduct = Vector3.Dot(transform.forward, directionToTarget);
-
-                if (dotProduct > 0.95f)
-                {
-                    Debug.Log("Target Locked");
-                }
-                else
-                {
-                    Debug.Log("Searching");
-                }
-
-            }
-        }
-
-        // How does Physics Overlap work...? 
-    } */
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // NEEDS TO ONLY WORK IF IT HAS ENEMY BASE COMPONENY
         if (collision.TryGetComponent<EnemyBase>(out EnemyBase enemy))
         {
+            Debug.Log("Enter");
+
             GameObject enterEnemy = collision.gameObject;
 
-            // WRITE ACTUAL ROTATION CODE 
+            currentTarget = enterEnemy;
 
-            // Vector3 vectorToTarget = (enterEnemy.transform.position - transform.position).normalized;
+            /*
+            Vector3 directionToTarget = enterEnemy.transform.position - transform.position;
 
-            Vector3 targetPos = (enterEnemy.transform.position - transform.position).normalized;
-
-
-            /* Vector3 directionToTarget = (enterEnemy.transform.position - transform.position).normalized;
             if (directionToTarget != Vector3.zero)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-                //slerp - Spherical Linear Interpolation
-            }
+                Debug.Log("Turn");
 
-            float dotProduct = Vector3.Dot(transform.forward, directionToTarget);
-
-            if (dotProduct > range)
-            {
-                Debug.Log("Target Locked");
-            }
-            else
-            {
-                Debug.Log("Searching");
+                float angleToTargetInDegrees = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
+                Quaternion rotationToTarget = Quaternion.Euler(0, 0, angleToTargetInDegrees);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotationToTarget, rotationSpeed * Time.deltaTime);
             } */
         }
-    }
+    } 
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
