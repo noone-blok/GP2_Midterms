@@ -4,8 +4,6 @@ using static UnityEngine.GraphicsBuffer;
 
 public abstract class EnemyBase : MonoBehaviour, IDamageable
 {
-    //[SerializeField] protected float speed = 0.02f;
-
     protected GameObject targetObj;
     protected Transform target;
 
@@ -13,7 +11,6 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
 
     protected Vector3 startPosition;
     protected float fractionOfJourney = 0f;
-
 
     protected Color currentColor;
     protected SpriteRenderer spriteRenderer;
@@ -23,7 +20,11 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
         startPosition = transform.position;
 
         targetObj = GameObject.FindGameObjectWithTag("Player");
-        target = targetObj.transform;
+        
+        if(targetObj != null)
+        {
+            target = targetObj.transform;
+        }
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.color = currentColor;
@@ -35,24 +36,36 @@ public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
         if (target != null && fractionOfJourney < 1f)
         {
-            //2. Accumulate the percentage of time passed
             fractionOfJourney += Time.deltaTime / timeToReachTarget;
 
-            //3. Teleport to the exact percentage point between start and target
             transform.position = Vector3.Lerp(startPosition, target.position, fractionOfJourney);
         }
     }
 
-    public virtual void Damage(Color color)
+    protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
-       if(color == currentColor)
-       {
-            Debug.Log("Hit");
-            Destroy(this.gameObject);
-       }
-       else
-       {
-            Debug.Log("Fluke");
-       }
+        if (collision.gameObject.GetComponent<BulletScript>() != null) // Meaning it has a BulletScript component...
+        {
+            BulletScript bullet = collision.gameObject.GetComponent<BulletScript>();
+
+            Color bulletColor = bullet.GetComponent<SpriteRenderer>().color;
+
+            if (bulletColor == currentColor) // if bullet's currentCOlor is equal
+            {
+                Debug.Log("Hit");
+                this.Damage();        
+            }
+            else
+            {
+                Debug.Log("Fluke");
+            }
+
+            bullet.Damage();
+        }
+    }
+
+    public virtual void Damage() // if a colored enemy is hit by a bullet of the same color...
+    {
+        Destroy(this.gameObject);
     }
 }

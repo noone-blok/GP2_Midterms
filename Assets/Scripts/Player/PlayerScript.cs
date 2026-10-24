@@ -3,21 +3,19 @@ using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 using static UnityEngine.GraphicsBuffer;
 
-public class PlayerScript : MonoBehaviour, ISwitchable
+public class PlayerScript : MonoBehaviour, ISwitchable, IDamageable
 {
-    // LOOK INTO MAKING THE TURRET ROTATE
     [SerializeField] private GameObject bullet;
     [SerializeField] private GameObject fireLocation;
 
-    // PLAYER HAS A TARGET LIST!!! 
     private float range = 9f;
-    private float distance;
-    private float nearestDistance;
     
     [SerializeField] private float rotationSpeed = 5f;
 
-    private GameObject[] targetList;
-    private GameObject currentTarget; 
+    private GameObject currentTarget;
+
+    private float distance;
+    private float nearestDistance = float.MaxValue;
 
     private States currentState; 
     private Color currentColor;
@@ -26,10 +24,6 @@ public class PlayerScript : MonoBehaviour, ISwitchable
 
     void Start()
     {
-        // transform.Rotate(Vector3.forward, 90);
-
-        // the axis of rotation needs to be forward
-
         currentState = States.Red;
         currentColor = Color.red;
 
@@ -41,19 +35,17 @@ public class PlayerScript : MonoBehaviour, ISwitchable
 
     void Update()
     {
+        GetCurrentTarget();
+
         if (currentTarget != null)
         {
             Vector3 directionToTarget = (transform.position - currentTarget.transform.position).normalized;
 
             if (directionToTarget != Vector3.zero)
             {
-                Debug.Log("Turn");
-
                 float angleToTargetInDegrees = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
-                Quaternion rotationToTarget = Quaternion.Euler(0, 0, 90 - angleToTargetInDegrees);
 
-
-                // transform.rotation = Quaternion.AngleAxis(90 - angleToTargetInDegrees, Vector3.forward);
+                Quaternion rotationToTarget = Quaternion.Euler(0, 0, angleToTargetInDegrees + 90); // ON GOD, NEVER REMOVE THE + 90
 
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotationToTarget, rotationSpeed * Time.deltaTime);
             }
@@ -62,8 +54,6 @@ public class PlayerScript : MonoBehaviour, ISwitchable
 
     void Fire()
     {
-        // LOOK INTO MAKING THIS CODE CLEANER
-
         Transform location = fireLocation.transform;
         GameObject theBullet = Instantiate(bullet, location.position, transform.rotation);
         theBullet.GetComponent<SpriteRenderer>().color = currentColor;
@@ -101,32 +91,35 @@ public class PlayerScript : MonoBehaviour, ISwitchable
         //Debug.Log(currentState);
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void GetCurrentTarget()
     {
-        if (collision.TryGetComponent<EnemyBase>(out EnemyBase enemy))
+        Collider2D[] colliderArray = Physics2D.OverlapCircleAll(transform.position, range);
+
+        foreach (var collider in colliderArray)
         {
-            Debug.Log("Enter");
-
-            GameObject enterEnemy = collision.gameObject;
-
-            currentTarget = enterEnemy;
-
-            /*
-            Vector3 directionToTarget = enterEnemy.transform.position - transform.position;
-
-            if (directionToTarget != Vector3.zero)
+            if (collider.TryGetComponent<EnemyBase>(out EnemyBase enemy))
             {
-                Debug.Log("Turn");
+                GameObject enterEnemy = collider.gameObject;
 
-                float angleToTargetInDegrees = Mathf.Atan2(directionToTarget.y, directionToTarget.x) * Mathf.Rad2Deg;
-                Quaternion rotationToTarget = Quaternion.Euler(0, 0, angleToTargetInDegrees);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotationToTarget, rotationSpeed * Time.deltaTime);
-            } */
+                distance = (transform.position - enterEnemy.transform.position).sqrMagnitude;
+
+                if (distance < nearestDistance && currentTarget == null)
+                {
+                    distance = nearestDistance;
+                    currentTarget = enterEnemy;
+                }
+            }
         }
-    } 
+    }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Damage();
+    }
+
+    public void Damage()
+    {
+        GameManager.instance.EndGame();
         Destroy(this.gameObject);
     }
 }

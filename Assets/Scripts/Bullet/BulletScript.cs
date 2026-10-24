@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BulletScript : MonoBehaviour
+public class BulletScript : MonoBehaviour, IDamageable
 {
     [SerializeField] private float speed = 5f;
 
@@ -15,10 +15,6 @@ public class BulletScript : MonoBehaviour
         currentColor = spriteRenderer.color;
 
         //Debug.Log($"Color in Bullet: {currentColor}");
-
-        // The color in the PlayerScript isn't transferring here? 
-
-        // I need to get the color from the sprite renderer
     }
 
     void Update()
@@ -30,13 +26,14 @@ public class BulletScript : MonoBehaviour
     {
         currentColor = color;
     }
-
-    private void OnCollisionEnter2D(Collision2D collision)
+    public void Damage()
     {
-        EnemyBase enemy = collision.gameObject.GetComponent<EnemyBase>();
-
-        enemy.Damage(this.currentColor);
-
         Destroy(this.gameObject);
     }
+
+    private void OnBecameInvisible()
+    {
+        Damage();
+    }
+
 }
